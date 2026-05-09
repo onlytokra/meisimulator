@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MEI Simulator - Império do Empreendedor</title>
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --primary: #22c55e;
+            --primary-hover: #16a34a;
+            --accent: #eab308;
+            --danger: #ef4444;
+            --info: #3b82f6;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --purple: #a855f7;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text);
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        #game-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 20px;
+            flex: 1;
+            width: 100%;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--border);
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .stats-bar {
+            display: flex;
+            gap: 15px;
+            background: var(--bg-card);
+            padding: 10px 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            flex-wrap: wrap;
+        }
+
+        .stat-item { display: flex; flex-direction: column; min-width: 100px; }
+        .stat-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-value { font-weight: bold; font-size: 1rem; }
+        .stat-value.money { color: var(--primary); }
+        .stat-value.xp { color: var(--purple); }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .card:hover { border-color: var(--primary); transform: translateY(-2px); }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+            transition: all 0.2s;
+            margin-top: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover { background: var(--primary-hover); }
+        .btn:disabled { background: var(--border); cursor: not-allowed; opacity: 0.5; }
+        .btn-danger { background: var(--danger); }
+        .btn-accent { background: var(--accent); color: black; }
+        .btn-purple { background: var(--purple); }
+        .btn-outline { background: transparent; border: 1px solid var(--primary); color: var(--primary); }
+
+        .business-detail, .shop-view {
+            display: none;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 10px;
+            overflow-x: auto;
+        }
+
+        .tab {
+            padding: 8px 16px;
+            cursor: pointer;
+            border-radius: 6px;
+            background: transparent;
+            color: var(--text-muted);
+            white-space: nowrap;
+            font-size: 0.9rem;
+        }
+
+        .tab.active { background: var(--primary); color: white; }
+
+        .management-section { display: none; }
+        .management-section.active { display: block; }
+
+        .list-item {
+            background: rgba(255,255,255,0.03);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid transparent;
+        }
+
+        .list-item:hover { border-color: var(--border); }
+
+        #chart-canvas {
+            width: 100%;
+            height: 150px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .next-day-btn {
+            background: linear-gradient(135deg, var(--accent), #d97706);
+            color: black;
+            font-size: 1.1rem;
+            padding: 18px 30px;
+            margin: 30px auto;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(234, 179, 8, 0.2);
+            display: block;
+            width: 100%;
+            max-width: 500px;
+            border: none;
+            cursor: pointer;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .next-day-btn:active { transform: scale(0.98); }
+
+        .badge {
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-weight: 900;
+            margin-left: 8px;
+            text-transform: uppercase;
+        }
+
+        .badge-active { background: var(--primary); color: white; }
+        .badge-danger { background: var(--danger); color: white; }
+        .badge-purple { background: var(--purple); color: white; }
+
+        .progress-container {
+            width: 100%;
+            height: 6px;
+            background: var(--border);
+            border-radius: 3px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+
+        .progress-fill { height: 100%; background: var(--primary); transition: width 0.3s; }
+        .xp-fill { background: var(--purple); }
+
+        #event-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .event-modal {
+            background: var(--bg-card);
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 450px;
+            width: 100%;
+            text-align: center;
+            border: 2px solid var(--accent);
+            box-shadow: 0 0 50px rgba(234, 179, 8, 0.2);
+        }
+
+        #notif-container { position: fixed; bottom: 20px; right: 20px; z-index: 2000; }
+        .notif {
+            background: var(--bg-card);
+            border-left: 4px solid var(--primary);
+            padding: 12px 20px;
+            margin-top: 8px;
+            border-radius: 8px;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.4);
+            animation: slideIn 0.3s forwards;
+            font-size: 0.9rem;
+        }
+
+        @keyframes slideIn { from { transform: translateX(110%); } to { transform: translateX(0); } }
+
+        .level-badge {
+            background: var(--purple);
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <header>
+            <div>
+                <h1 style="color: var(--primary)">MEI <span style="color: white">Simulator</span> <span class="badge badge-purple">V2.0</span></h1>
+                <p id="game-date" style="color: var(--text-muted)">Carregando dia...</p>
+            </div>
+            <div class="stats-bar">
+                <div class="stat-item">
+                    <span class="stat-label">Capital</span>
+                    <span id="player-money" class="stat-value money">R$ 0,00</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Nível MEI</span>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span id="player-level" class="stat-value xp">LV 1</span>
+                        <div class="progress-container" style="width: 60px; margin-top: 0;"><div id="xp-progress" class="progress-fill xp-fill"></div></div>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Reputação</span>
+                    <span id="player-rep" class="stat-value" style="color: var(--accent)">50%</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Hub -->
+        <div id="main-hub">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 10px; flex-wrap: wrap;">
+                <h2>Meus Negócios</h2>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn btn-purple" style="width: auto; margin: 0" onclick="ui.showShop()">💎 Loja de Luxo</button>
+                    <button class="btn btn-outline" style="width: auto; margin: 0" onclick="ui.toggleBank()">🏦 Banco</button>
+                </div>
+            </div>
+            
+            <div id="business-grid" class="grid"></div>
+            
+            <button class="next-day-btn" onclick="game.nextDay()">Próximo Dia ➔</button>
+            
+            <div class="card" style="margin-top: 20px;">
+                <h3>Análise de Performance</h3>
+                <canvas id="chart-canvas"></canvas>
+                <div id="history-list" style="margin-top: 15px; max-height: 200px; overflow-y: auto;"></div>
+            </div>
+        </div>
+
+        <!-- Business Detail View -->
+        <div id="business-view" class="business-detail">
+            <button class="btn btn-outline" style="width: auto; margin-bottom: 20px;" onclick="ui.showHub()">← Voltar</button>
+            <div id="business-header" style="margin-bottom: 20px;"></div>
+
+            <div class="tabs">
+                <div class="tab active" onclick="ui.changeTab(0)">Operação</div>
+                <div class="tab" onclick="ui.changeTab(1)">Estoque</div>
+                <div class="tab" onclick="ui.changeTab(2)">Equipa</div>
+                <div class="tab" onclick="ui.changeTab(3)">Marketing & Upgrades</div>
+            </div>
+
+            <div id="tab-sales" class="management-section active">
+                <div class="grid">
+                    <div class="card">
+                        <h3>Ajuste de Preço</h3>
+                        <p class="text-muted" style="margin-bottom: 15px">Preço unitário: <span id="price-real-value" style="color: var(--primary); font-weight: bold;">R$ 0,00</span></p>
+                        <input type="range" id="price-slider" min="50" max="250" value="100" style="width: 100%" oninput="ui.updatePriceLabel()">
+                        <div style="display: flex; justify-content: space-between; margin-top: 10px;">
+                            <span class="text-muted">Económico</span>
+                            <span id="price-label" style="font-weight: bold;">100%</span>
+                            <span class="text-muted">Premium</span>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h3>Ontem</h3>
+                        <div id="performance-stats"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-stock" class="management-section">
+                <div class="grid">
+                    <div class="card">
+                        <h3>Armazém</h3>
+                        <p id="stock-count" style="font-size: 2rem; font-weight: bold">0 / 0</p>
+                        <div class="progress-container"><div id="stock-progress" class="progress-fill"></div></div>
+                        <p class="text-muted" style="margin-top: 10px; font-size: 0.8rem;">Cuidado: Stock parado pode estragar!</p>
+                    </div>
+                    <div class="card">
+                        <h3>Fornecedor</h3>
+                        <p id="supplier-price" class="text-muted" style="margin-bottom: 10px;">Preço custo: R$ 0,00</p>
+                        <button class="btn" onclick="game.buyStock(20)">Comprar 20 Unid.</button>
+                        <button class="btn" onclick="game.buyStock(100)">Lote Atacado (100 Unid.)</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-staff" class="management-section">
+                <div id="staff-list"></div>
+                <button id="hire-btn" class="btn" onclick="game.hireStaff()">Contratar (+ R$ 1.000,00)</button>
+            </div>
+
+            <div id="tab-infra" class="management-section">
+                <div id="upgrade-list" class="grid"></div>
+            </div>
+        </div>
+        
+        <!-- Shop View (Luxury Items) -->
+        <div id="shop-view" class="shop-view">
+            <button class="btn btn-outline" style="width: auto; margin-bottom: 20px;" onclick="ui.showHub()">← Voltar</button>
+            <h2 style="margin-bottom: 20px;">💎 Conquistas de Estilo de Vida</h2>
+            <div id="luxury-grid" class="grid"></div>
+        </div>
+
+        <!-- Bank View -->
+        <div id="bank-view" class="business-detail">
+            <button class="btn btn-outline" style="width: auto; margin-bottom: 20px;" onclick="ui.showHub()">← Voltar</button>
+            <div class="card">
+                <h2 style="color: var(--accent)">🏦 Financiamento MEI</h2>
+                <div id="loan-info" style="margin: 20px 0;"></div>
+                <div class="grid">
+                    <div class="card">
+                        <h4>Crédito Bancário</h4>
+                        <p class="text-muted">Juros: 15%</p>
+                        <button class="btn btn-accent" onclick="game.takeLoan(5000, 5750, 10)">R$ 5.000 (10 dias)</button>
+                    </div>
+                    <div class="card" style="border-color: var(--danger)">
+                        <h4>Agiota da Esquina</h4>
+                        <p class="text-muted">Juros: 50% (Rápido!)</p>
+                        <button class="btn btn-danger" onclick="game.takeLoan(2000, 3000, 3)">R$ 2.000 (3 dias)</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Event Overlay -->
+    <div id="event-overlay">
+        <div class="event-modal">
+            <h2 id="event-title">Notícia!</h2>
+            <p id="event-desc" style="margin: 20px 0; color: var(--text-muted);"></p>
+            <button class="btn btn-accent" onclick="ui.closeEvent()">Confirmar</button>
+        </div>
+    </div>
+
+    <div id="notif-container"></div>
+
+    <script>
+        // --- CONSTANTES ---
+        const BIZ_TYPES = {
+            MERCADINHO: { id: 'mercadinho', name: 'Mercadinho', icon: '🛒', unlockCost: 0, basePrice: 20, stockCost: 10, baseDemand: 25, maxStock: 100, rent: 40 },
+            BARBEARIA: { id: 'barbearia', name: 'Barbearia', icon: '💈', unlockCost: 4000, basePrice: 50, stockCost: 5, baseDemand: 15, maxStock: 50, rent: 100 },
+            LANCHONETE: { id: 'lanchonete', name: 'Lanchonete', icon: '🍔', unlockCost: 10000, basePrice: 35, stockCost: 15, baseDemand: 40, maxStock: 250, rent: 180 },
+            SALAO: { id: 'salao', name: 'Studio Beauty', icon: '💅', unlockCost: 30000, basePrice: 150, stockCost: 40, baseDemand: 12, maxStock: 80, rent: 300 }
+        };
+
+        const LUXURY_ITEMS = [
+            { id: 'moto', name: 'Mota de Entregas', cost: 8000, icon: '🛵', perk: 'Logística: +10% vendas em todos negócios' },
+            { id: 'escritorio', name: 'Coworking VIP', cost: 25000, icon: '🏢', perk: 'Foco: -15% custos de manutenção' },
+            { id: 'carro', name: 'Sedan Executivo', cost: 65000, icon: '🚗', perk: 'Status: +15% Reputação base' },
+            { id: 'mansao', name: 'Cobertura Duplex', cost: 250000, icon: '🏙️', perk: 'Império: Desbloqueia bónus de XP x2' }
+        ];
+
+        const UPGRADES = [
+            { id: 'ar', name: 'Ar Condicionado', cost: 2000, effect: 'Conforto: +15% Procura' },
+            { id: 'wifi', name: 'Wi-Fi Grátis', cost: 800, effect: 'Fidelidade: +5% Reputação' },
+            { id: 'stock_plus', name: 'Câmara Fria', cost: 3500, effect: 'Conservação: Stock não estraga' }
+        ];
+
+        const STAFF_LEVELS = [
+            { name: 'Estagiário', cap: 10, wage: 80 },
+            { name: 'Profissional', cap: 25, wage: 160 },
+            { name: 'Gerente', cap: 50, wage: 350 }
+        ];
+
+        const DAYS = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+
+        // --- ESTADO ---
+        let state = {
+            day: 1,
+            money: 5000,
+            xp: 0,
+            level: 1,
+            reputation: 50,
+            loans: [],
+            luxury: [],
+            history: [],
+            ownedBusinesses: {
+                'mercadinho': { stock: 30, priceMult: 1.0, staff: [], upgrades: [], mkt: false, lastRev: 0, lastCust: 0 }
+            }
+        };
+
+        // --- LÓGICA DO JOGO ---
+        const game = {
+            init() {
+                this.load();
+                ui.initChart();
+                this.refresh();
+            },
+            save() { localStorage.setItem('mei_sim_v2', JSON.stringify(state)); },
+            load() { const s = localStorage.getItem('mei_sim_v2'); if(s) state = JSON.parse(s); },
+            
+            refresh() {
+                ui.updateHeader();
+                ui.renderHub();
+                ui.renderHistory();
+                ui.updateChart();
+            },
+
+            nextDay() {
+                let dailyRev = 0;
+                let dailyCost = 0;
+                
+                // Processar Empréstimos
+                state.loans.forEach(l => {
+                    l.daysLeft--;
+                    if(l.daysLeft <= 0) {
+                        state.money -= l.pay;
+                        ui.notify(`Banco: R$ ${l.pay} debitados.`, 'danger');
+                    }
+                });
+                state.loans = state.loans.filter(l => l.daysLeft > 0);
+
+                // Processar Negócios
+                for (let id in state.ownedBusinesses) {
+                    const b = state.ownedBusinesses[id];
+                    const t = BIZ_TYPES[id.toUpperCase()];
+                    
+                    // Cálculo de Demanda
+                    let demand = t.baseDemand * (state.reputation/50);
+                    demand *= (2.5 - (b.priceMult * 1.5)); // Elasticidade de preço
+                    
+                    // Bónus de Itens de Luxo
+                    if(state.luxury.includes('moto')) demand *= 1.1;
+                    if(state.luxury.includes('carro')) state.reputation = Math.min(100, state.reputation + 0.1);
+
+                    // Upgrades
+                    if(b.upgrades.includes('ar')) demand *= 1.15;
+                    
+                    // Capacidade Staff
+                    let capacity = 15; 
+                    b.staff.forEach(s => capacity += STAFF_LEVELS[s.lvl].cap);
+
+                    let finalSales = Math.min(Math.floor(demand * (0.8 + Math.random() * 0.4)), capacity, b.stock);
+                    let revenue = finalSales * (t.basePrice * b.priceMult);
+                    let wageCost = b.staff.reduce((acc, curr) => acc + STAFF_LEVELS[curr.lvl].wage, 0);
+                    let rentCost = t.rent;
+                    if(state.luxury.includes('escritorio')) rentCost *= 0.85;
+
+                    // Perda de Stock (Validade)
+                    if(!b.upgrades.includes('stock_plus') && b.stock > 10) {
+                        if(Math.random() > 0.7) {
+                            const loss = Math.floor(b.stock * 0.1);
+                            b.stock -= loss;
+                            ui.notify(`${t.name}: Perdeu ${loss} unid. por validade.`, 'danger');
+                        }
+                    }
+
+                    b.stock -= finalSales;
+                    b.lastRev = revenue;
+                    b.lastCust = finalSales;
+                    dailyRev += revenue;
+                    dailyCost += (wageCost + rentCost);
+                }
+
+                const net = dailyRev - dailyCost;
+                state.money += net;
+                state.xp += Math.floor(dailyRev / 10) * (state.luxury.includes('mansao') ? 2 : 1);
+                
+                // Level Up
+                const nextLevelXP = state.level * 500;
+                if(state.xp >= nextLevelXP) {
+                    state.level++;
+                    ui.showEvent("LEVEL UP!", `Parabéns! Chegou ao nível ${state.level}. Sua reputação subiu.`);
+                    state.reputation = Math.min(100, state.reputation + 5);
+                }
+
+                state.history.push({ day: state.day, net: net, money: state.money });
+                if(state.history.length > 20) state.history.shift();
+
+                state.day++;
+                this.refresh();
+                this.randomEvent();
+                this.save();
+            },
+
+            randomEvent() {
+                if(Math.random() > 0.2) return;
+                const events = [
+                    { t: "Black Friday", d: "A procura aumentou em 50% por um dia!", f: () => { state.reputation += 2; } },
+                    { t: "Greve de Transportes", d: "Custos de reposição de stock subiram.", f: () => { state.money -= 200; } },
+                    { t: "Elogio na Web", d: "Um cliente famoso adorou o seu serviço. +5 Reputação.", f: () => { state.reputation = Math.min(100, state.reputation + 5); } }
+                ];
+                const e = events[Math.floor(Math.random() * events.length)];
+                e.f();
+                ui.showEvent(e.t, e.d);
+            },
+
+            buyStock(amt) {
+                const b = state.ownedBusinesses[ui.activeBiz];
+                const t = BIZ_TYPES[ui.activeBiz.toUpperCase()];
+                const cost = amt * t.stockCost;
+                if(state.money >= cost && b.stock + amt <= t.maxStock) {
+                    state.money -= cost;
+                    b.stock += amt;
+                    this.refresh();
+                    ui.showBusiness(ui.activeBiz);
+                    ui.notify("Stock abastecido.");
+                } else ui.notify("Erro: Verifique saldo ou espaço.", "danger");
+            },
+
+            hireStaff() {
+                const b = state.ownedBusinesses[ui.activeBiz];
+                if(state.money >= 1000 && b.staff.length < 4) {
+                    state.money -= 1000;
+                    b.staff.push({ lvl: 0 });
+                    ui.showBusiness(ui.activeBiz);
+                    this.refresh();
+                }
+            },
+
+            buyLuxury(id) {
+                const item = LUXURY_ITEMS.find(i => i.id === id);
+                if(state.money >= item.cost && !state.luxury.includes(id)) {
+                    state.money -= item.cost;
+                    state.luxury.push(id);
+                    ui.showShop();
+                    this.refresh();
+                    ui.notify(`Conquista: ${item.name} adquirido!`);
+                }
+            },
+
+            takeLoan(amt, pay, days) {
+                if(state.loans.length >= 2) return ui.notify("Muitos empréstimos ativos.", "danger");
+                state.money += amt;
+                state.loans.push({ pay, daysLeft: days });
+                ui.toggleBank();
+                this.refresh();
+            }
+        };
+
+        // --- UI ---
+        const ui = {
+            activeBiz: null,
+            chart: null,
+
+            updateHeader() {
+                document.getElementById('player-money').innerText = `R$ ${state.money.toLocaleString('pt-PT')}`;
+                document.getElementById('player-level').innerText = `LV ${state.level}`;
+                document.getElementById('player-rep').innerText = `${state.reputation.toFixed(0)}%`;
+                document.getElementById('game-date').innerText = `Dia ${state.day} - ${DAYS[state.day % 7]}`;
+                
+                const nextXP = state.level * 500;
+                document.getElementById('xp-progress').style.width = `${(state.xp / nextXP) * 100}%`;
+            },
+
+            renderHub() {
+                const grid = document.getElementById('business-grid');
+                grid.innerHTML = '';
+                Object.keys(BIZ_TYPES).forEach(k => {
+                    const t = BIZ_TYPES[k];
+                    const owned = state.ownedBusinesses[t.id];
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    if(owned) {
+                        card.innerHTML = `
+                            <h3>${t.icon} ${t.name}</h3>
+                            <p class="text-muted">Stock: ${owned.stock} un.</p>
+                            <button class="btn" onclick="ui.showBusiness('${t.id}')">Gerir Unidade</button>
+                        `;
+                    } else {
+                        const can = state.money >= t.unlockCost;
+                        card.innerHTML = `
+                            <h3 style="opacity: 0.5">${t.icon} ${t.name}</h3>
+                            <p class="text-muted">Investimento: R$ ${t.unlockCost}</p>
+                            <button class="btn btn-outline" ${!can?'disabled':''} onclick="game.buyBusiness('${t.id}')">Abrir Filial</button>
+                        `;
+                    }
+                    grid.appendChild(card);
+                });
+            },
+
+            showBusiness(id) {
+                this.activeBiz = id;
+                const b = state.ownedBusinesses[id];
+                const t = BIZ_TYPES[id.toUpperCase()];
+                document.getElementById('main-hub').style.display = 'none';
+                document.getElementById('shop-view').style.display = 'none';
+                document.getElementById('bank-view').style.display = 'none';
+                document.getElementById('business-view').style.display = 'block';
+
+                document.getElementById('business-header').innerHTML = `<h2>${t.icon} ${t.name}</h2>`;
+                document.getElementById('price-real-value').innerText = `R$ ${(t.basePrice * b.priceMult).toFixed(2)}`;
+                document.getElementById('performance-stats').innerHTML = `
+                    <div class="list-item"><span>Clientes:</span><strong>${b.lastCust}</strong></div>
+                    <div class="list-item"><span>Vendas:</span><strong class="money">R$ ${b.lastRev.toFixed(0)}</strong></div>
+                `;
+                document.getElementById('stock-count').innerText = `${b.stock} / ${t.maxStock}`;
+                document.getElementById('stock-progress').style.width = `${(b.stock / t.maxStock)*100}%`;
+                document.getElementById('supplier-price').innerText = `Preço Reposição: R$ ${t.stockCost}`;
+
+                const sList = document.getElementById('staff-list');
+                sList.innerHTML = '<h3>Mão de Obra</h3>';
+                b.staff.forEach(s => {
+                    const info = STAFF_LEVELS[s.lvl];
+                    sList.innerHTML += `<div class="list-item"><span>${info.name}</span><strong>R$ ${info.wage}/dia</strong></div>`;
+                });
+
+                const upList = document.getElementById('upgrade-list');
+                upList.innerHTML = '';
+                UPGRADES.forEach(u => {
+                    const has = b.upgrades.includes(u.id);
+                    upList.innerHTML += `
+                        <div class="card">
+                            <h4>${u.name}</h4>
+                            <p class="text-muted" style="font-size: 0.8rem">${u.effect}</p>
+                            <button class="btn btn-outline" ${has?'disabled':''} onclick="ui.buyUpgrade('${u.id}')">${has?'Ativo':'Comprar R$ '+u.cost}</button>
+                        </div>
+                    `;
+                });
+            },
+
+            buyUpgrade(uid) {
+                const b = state.ownedBusinesses[this.activeBiz];
+                const up = UPGRADES.find(x => x.id === uid);
+                if(state.money >= up.cost) {
+                    state.money -= up.cost;
+                    b.upgrades.push(uid);
+                    this.showBusiness(this.activeBiz);
+                    game.refresh();
+                }
+            },
+
+            showShop() {
+                document.getElementById('main-hub').style.display = 'none';
+                document.getElementById('business-view').style.display = 'none';
+                document.getElementById('shop-view').style.display = 'block';
+                
+                const grid = document.getElementById('luxury-grid');
+                grid.innerHTML = '';
+                LUXURY_ITEMS.forEach(item => {
+                    const has = state.luxury.includes(item.id);
+                    grid.innerHTML += `
+                        <div class="card" style="${has?'border-color: var(--purple)':''}">
+                            <div style="font-size: 2rem">${item.icon}</div>
+                            <h3>${item.name} ${has?'<span class="badge badge-purple">Adquirido</span>':''}</h3>
+                            <p class="text-muted" style="font-size: 0.8rem; margin: 10px 0;">${item.perk}</p>
+                            <button class="btn btn-purple" ${has || state.money < item.cost ? 'disabled':''} onclick="game.buyLuxury('${item.id}')">
+                                ${has ? 'Na Garagem' : 'Comprar R$ ' + item.cost.toLocaleString()}
+                            </button>
+                        </div>
+                    `;
+                });
+            },
+
+            showHub() {
+                document.getElementById('main-hub').style.display = 'block';
+                document.getElementById('business-view').style.display = 'none';
+                document.getElementById('shop-view').style.display = 'none';
+                document.getElementById('bank-view').style.display = 'none';
+            },
+
+            toggleBank() {
+                document.getElementById('main-hub').style.display = 'none';
+                document.getElementById('bank-view').style.display = 'block';
+                const info = document.getElementById('loan-info');
+                info.innerHTML = state.loans.length ? state.loans.map(l => `<div class="list-item">Pagar R$ ${l.pay} em ${l.daysLeft} dias</div>`).join('') : 'Sem dívidas.';
+            },
+
+            changeTab(idx) {
+                document.querySelectorAll('.management-section').forEach((s, i) => s.classList.toggle('active', i === idx));
+                document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === idx));
+            },
+
+            updatePriceLabel() {
+                const val = document.getElementById('price-slider').value;
+                document.getElementById('price-label').innerText = val + '%';
+                if(this.activeBiz) {
+                    state.ownedBusinesses[this.activeBiz].priceMult = val/100;
+                    const t = BIZ_TYPES[this.activeBiz.toUpperCase()];
+                    document.getElementById('price-real-value').innerText = `R$ ${(t.basePrice * (val/100)).toFixed(2)}`;
+                }
+            },
+
+            initChart() {
+                const canvas = document.getElementById('chart-canvas');
+                this.ctx = canvas.getContext('2d');
+            },
+
+            updateChart() {
+                const ctx = this.ctx;
+                const history = state.history;
+                if(history.length < 2) return;
+                
+                ctx.clearRect(0, 0, 400, 150);
+                ctx.beginPath();
+                ctx.strokeStyle = '#22c55e';
+                ctx.lineWidth = 3;
+                
+                const max = Math.max(...history.map(h => h.money), 1);
+                const min = Math.min(...history.map(h => h.money), 0);
+                const range = max - min;
+
+                history.forEach((h, i) => {
+                    const x = (i / (history.length - 1)) * 380 + 10;
+                    const y = 140 - ((h.money - min) / range) * 120;
+                    if(i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                });
+                ctx.stroke();
+            },
+
+            renderHistory() {
+                const list = document.getElementById('history-list');
+                list.innerHTML = state.history.slice().reverse().map(h => `
+                    <div class="list-item" style="font-size: 0.8rem">
+                        <span>Dia ${h.day}</span>
+                        <span style="color: ${h.net >= 0 ? 'var(--primary)' : 'var(--danger)'}">${h.net >= 0 ? '+' : ''}R$ ${h.net.toFixed(0)}</span>
+                    </div>
+                `).join('');
+            },
+
+            showEvent(t, d) {
+                document.getElementById('event-title').innerText = t;
+                document.getElementById('event-desc').innerText = d;
+                document.getElementById('event-overlay').style.display = 'flex';
+            },
+            closeEvent() { document.getElementById('event-overlay').style.display = 'none'; },
+            notify(m, type = 'success') {
+                const c = document.getElementById('notif-container');
+                const n = document.createElement('div');
+                n.className = 'notif';
+                n.style.borderLeftColor = type === 'success' ? 'var(--primary)' : 'var(--danger)';
+                n.innerText = m;
+                c.appendChild(n);
+                setTimeout(() => { n.style.opacity = '0'; setTimeout(() => n.remove(), 300); }, 3000);
+            }
+        };
+
+        game.init();
+    </script>
+</body>
+</html>

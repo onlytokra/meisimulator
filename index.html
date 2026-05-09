@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MEI Simulator Pro - Gestão Hardcore</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --bg-dark: #0f172a;
@@ -31,7 +32,6 @@
 
         .container { max-width: 1200px; margin: 0 auto; padding: 20px; width: 100%; }
 
-        /* Top Bar */
         header {
             display: grid;
             grid-template-columns: 1fr auto;
@@ -60,7 +60,6 @@
         .value.pj { color: var(--info); }
         .value.pf { color: var(--primary); }
 
-        /* Dashboard Grid */
         .main-grid {
             display: grid;
             grid-template-columns: 2fr 1fr;
@@ -102,6 +101,7 @@
             align-items: center;
             gap: 8px;
             justify-content: center;
+            text-align: center;
         }
 
         .btn-primary { background: var(--primary); color: white; }
@@ -116,12 +116,13 @@
             border-radius: 4px;
             text-transform: uppercase;
             font-weight: 800;
+            cursor: pointer;
         }
 
         .bg-danger { background: var(--danger); }
         .bg-success { background: var(--primary); }
+        .bg-warning { background: var(--accent); color: black; }
 
-        /* Modal / Overlay */
         #modal-overlay {
             position: fixed;
             inset: 0;
@@ -140,6 +141,8 @@
             border-radius: 20px;
             padding: 30px;
             border: 1px solid var(--info);
+            max-height: 90vh;
+            overflow-y: auto;
         }
 
         .next-day-area {
@@ -147,13 +150,15 @@
             bottom: 20px;
             z-index: 100;
             text-align: center;
+            margin-top: auto;
+            padding: 20px 0;
         }
 
         .btn-next {
             background: var(--accent);
             color: black;
-            padding: 20px 60px;
-            font-size: 1.2rem;
+            padding: 15px 50px;
+            font-size: 1.1rem;
             border-radius: 50px;
             box-shadow: 0 10px 20px rgba(234, 179, 8, 0.3);
             font-weight: 900;
@@ -161,9 +166,9 @@
 
         .weather-icon { font-size: 1.5rem; margin-right: 10px; }
         
-        input[type="text"], input[type="number"] {
+        input, select {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             background: var(--bg-dark);
             border: 1px solid var(--border);
             color: white;
@@ -192,6 +197,12 @@
         }
 
         @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+
+        .chart-container {
+            position: relative;
+            height: 250px;
+            width: 100%;
+        }
     </style>
 </head>
 <body>
@@ -200,7 +211,7 @@
     <header>
         <div>
             <h1 style="color: var(--info)">MEI <span style="color: white">Simulator Pro</span></h1>
-            <p id="display-date" class="label">Dia 1 - Segunda-feira | ☀️ Ensolarado</p>
+            <p id="display-date" class="label">Carregando...</p>
         </div>
         <div class="accounts-display">
             <div class="account-card">
@@ -215,52 +226,55 @@
     </header>
 
     <div class="main-grid">
-        <!-- Coluna Esquerda: Negócios -->
         <section>
             <div class="card">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                     <h3>Seus Negócios</h3>
                     <button class="btn btn-info" onclick="ui.openNewBizModal()">+ Abrir Novo</button>
                 </div>
-                <div id="biz-list">
-                    <!-- Gerado via JS -->
-                </div>
+                <div id="biz-list"></div>
             </div>
 
             <div class="card">
-                <h3>Resumo Financeiro da Semana</h3>
-                <canvas id="main-chart" style="width: 100%; height: 200px; margin-top: 15px;"></canvas>
+                <h3>Desempenho Semanal (Lucro Líquido)</h3>
+                <div class="chart-container">
+                    <canvas id="main-chart"></canvas>
+                </div>
             </div>
         </section>
 
-        <!-- Coluna Direita: Gestão & Obrigações -->
         <aside>
             <div class="card">
                 <h3>Obrigações & Taxas</h3>
                 <div id="taxes-list" style="margin-top: 15px;">
                     <div class="biz-card">
                         <span>DAS MEI (Mensal)</span>
-                        <span id="das-status" class="status-badge bg-success">Pago</span>
+                        <span id="das-status" class="status-badge">Pago</span>
                     </div>
-                    <div class="biz-card">
-                        <span>Aluguéis Totais</span>
-                        <span id="total-rent" style="color: var(--danger)">R$ 0,00</span>
+                    <div class="biz-card" title="Calculado por dia com base nos seus negócios">
+                        <span>Custos Diários</span>
+                        <span id="total-daily-costs" style="color: var(--danger)">R$ 0,00</span>
                     </div>
                 </div>
                 <button class="btn btn-outline btn-block" onclick="game.withdrawProLabore()">Retirar Pró-Labore (R$ 1.500)</button>
             </div>
 
             <div class="card">
-                <h3>Equipe & Funcionários</h3>
-                <div id="staff-summary" class="label" style="margin-bottom: 10px;">0 Funcionários contratados</div>
+                <h3>Equipe Geral</h3>
+                <div id="staff-summary" class="label" style="margin-bottom: 10px;">0 Funcionários</div>
                 <div id="staff-list"></div>
+                <p style="font-size: 0.7rem; color: var(--text-muted); margin-top: 10px;">
+                    * Funcionários aumentam produtividade, mas custam R$ 80/dia cada.
+                </p>
             </div>
 
             <div class="card">
                 <h3>Banco & Crédito</h3>
-                <p class="label">Limite de Cheque Especial: R$ 2.000</p>
-                <div id="loan-display" style="margin: 10px 0;"></div>
-                <button class="btn btn-danger btn-block" onclick="game.takeLoan()">Pedir Empréstimo Emergencial</button>
+                <div id="loan-info">
+                    <p class="label">Crédito Disponível: R$ 5.000</p>
+                    <div id="active-loans" style="margin-top: 10px;"></div>
+                </div>
+                <button class="btn btn-danger btn-block" onclick="ui.openLoanModal()">Solicitar Empréstimo</button>
             </div>
         </aside>
     </div>
@@ -270,7 +284,6 @@
     </div>
 </div>
 
-<!-- Modais -->
 <div id="modal-overlay">
     <div id="modal-content" class="modal"></div>
 </div>
@@ -278,7 +291,9 @@
 <div id="notif-area" class="notif-area"></div>
 
 <script>
-    // --- CONFIGURAÇÕES E TIPOS ---
+    // --- CONFIGURAÇÕES ---
+    const DAYS = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
+    
     const BIZ_CONFIGS = {
         mercadinho: { name: 'Mercadinho', icon: '🛒', openCost: 2000, rent: 150, baseDemand: 30, stockPrice: 8, salePrice: 20 },
         barbearia: { name: 'Barbearia', icon: '💈', openCost: 5000, rent: 400, baseDemand: 15, stockPrice: 5, salePrice: 60 },
@@ -288,7 +303,7 @@
     const WEATHER = [
         { name: 'Ensolarado', icon: '☀️', mod: 1.0 },
         { name: 'Nublado', icon: '☁️', mod: 0.9 },
-        { name: 'Chuvoso', icon: '🌧️', mod: 0.6 }, // Afeta negócios presenciais
+        { name: 'Chuvoso', icon: '🌧️', mod: 0.6 },
         { name: 'Calor Extremo', icon: '🔥', mod: 1.2 }
     ];
 
@@ -299,108 +314,125 @@
         moneyPF: 1000,
         weatherIdx: 0,
         dasPaid: true,
-        historyPJ: [],
+        historyPJ: [0, 0, 0, 0, 0, 0, 0],
         businesses: [
             { 
                 id: Date.now(), 
                 type: 'mercadinho', 
-                name: 'Meu Primeiro Mercadinho', 
+                name: 'Mercado Inicial', 
                 stock: 50, 
-                staff: [], 
+                staffCount: 0, 
                 price: 20, 
                 reputation: 80,
-                expiryStock: 5 // Estoque que vence amanhã
+                expiryStock: 0 
             }
         ],
         loans: []
     };
 
-    // --- LÓGICA PRINCIPAL ---
+    let chartInstance = null;
+
+    // --- LÓGICA DO JOGO ---
     const game = {
         init() {
             this.load();
+            ui.initChart();
             ui.refresh();
         },
 
-        save() { localStorage.setItem('mei_pro_save', JSON.stringify(state)); },
+        save() { localStorage.setItem('mei_pro_v3_save', JSON.stringify(state)); },
         load() { 
-            const saved = localStorage.getItem('mei_pro_save');
+            const saved = localStorage.getItem('mei_pro_v3_save');
             if(saved) state = JSON.parse(saved);
         },
 
         nextDay() {
-            let dailyRevenue = 0;
-            let dailyExpenses = 0;
+            let totalDailyRevenue = 0;
+            let totalDailyExpenses = 0;
             const isWeekend = (state.day % 7 === 6 || state.day % 7 === 0);
-            
-            // 1. Processar cada negócio
+
+            // Processar Negócios
             state.businesses.forEach(biz => {
                 const config = BIZ_CONFIGS[biz.type];
                 
-                // Cálculo de Demanda (Clima + Reputação + Preço + FDS)
+                // Demanda
                 let demand = config.baseDemand * (biz.reputation / 100);
                 demand *= WEATHER[state.weatherIdx].mod;
-                if(isWeekend) demand *= 1.4; // Movimento maior fim de semana
+                if(isWeekend) demand *= 1.4;
                 
-                // Elasticidade (Preço alto = menos demanda)
+                // Elasticidade Preço
                 const priceRatio = biz.price / config.salePrice;
-                demand *= Math.max(0.2, 2 - priceRatio);
+                demand *= Math.max(0.1, 2 - priceRatio);
 
-                // Vendas Reais
+                // Bônus Funcionários (cada um atende +20% de demanda)
+                demand *= (1 + (biz.staffCount * 0.2));
+
                 let sales = Math.min(Math.floor(demand), biz.stock);
                 let revenue = sales * biz.price;
                 
-                // Despesas do negócio
-                let wages = biz.staff.length * 80; // Salário diário
-                let electricity = 20 + (sales * 0.5); // Proporcional ao movimento
-                
-                // Perda por validade
+                // Custos
+                let wages = biz.staffCount * 80;
+                let electricity = 15 + (sales * 0.4);
+                let dailyRent = config.rent / 30;
+                let bizExpenses = wages + electricity + dailyRent;
+
+                // Perda Estoque
                 if(biz.expiryStock > 0) {
-                    ui.notify(`${biz.name}: R$ ${biz.expiryStock * config.stockPrice} perdidos em produtos vencidos!`, 'danger');
-                    biz.stock -= biz.expiryStock;
-                    biz.expiryStock = 0;
+                    ui.notify(`${biz.name}: Perda de R$ ${biz.expiryStock * config.stockPrice} em produtos!`, 'danger');
+                    biz.stock = Math.max(0, biz.stock - biz.expiryStock);
                 }
 
                 biz.stock -= sales;
-                // Gerar validade para o próximo dia (10% do estoque atual corre risco)
-                biz.expiryStock = Math.floor(Math.random() * (biz.stock * 0.15));
+                biz.expiryStock = Math.floor(Math.random() * (biz.stock * 0.1)); // 10% do que sobrou pode vencer
 
-                dailyRevenue += revenue;
-                dailyExpenses += (wages + electricity + (config.rent / 30));
+                totalDailyRevenue += revenue;
+                totalDailyExpenses += bizExpenses;
 
-                // Chance de funcionário pedir aumento ou demissão
-                biz.staff.forEach((s, idx) => {
-                    if(Math.random() > 0.98) {
-                        ui.showEvent("Pedido de Aumento", `Seu funcionário na ${biz.name} quer aumento. Se negar, ele pode sair.`);
-                    }
-                });
+                // Evento: Funcionário Falta
+                if(biz.staffCount > 0 && Math.random() < 0.05) {
+                    ui.notify(`Funcionário da ${biz.name} faltou hoje! Produtividade caiu.`, 'warning');
+                    totalDailyRevenue -= (revenue * 0.2); // Perda de produtividade
+                }
             });
 
-            // 2. Impostos (DAS todo dia 20)
-            if (state.day % 30 === 20) {
-                state.dasPaid = false;
-                ui.notify("Guia DAS MEI emitida! Vence hoje.", "info");
-            }
-
-            // 3. Cheque Especial
-            if (state.moneyPJ < 0) {
-                const interest = Math.abs(state.moneyPJ) * 0.05; // 5% ao dia
+            // Processar Empréstimos (Juros de 2% ao dia)
+            state.loans.forEach(loan => {
+                const interest = loan.amount * 0.02;
                 state.moneyPJ -= interest;
-                ui.notify("Juros de Cheque Especial debitados!", "danger");
+                loan.daysLeft--;
+            });
+            // Remover empréstimos quitados automaticamente (simplificação)
+            state.loans = state.loans.filter(l => l.daysLeft > 0);
+
+            // Impostos
+            if (state.day % 30 === 20) state.dasPaid = false;
+            if (!state.dasPaid && state.day % 30 > 25) {
+                const multa = 50;
+                state.moneyPJ -= multa;
+                ui.notify("Multa por DAS atrasado aplicada!", "danger");
             }
 
-            // Atualizar Estado
-            state.moneyPJ += (dailyRevenue - dailyExpenses);
-            state.historyPJ.push(dailyRevenue - dailyExpenses);
+            // Cheque Especial (Juros Pesados)
+            if (state.moneyPJ < 0) {
+                const interest = Math.abs(state.moneyPJ) * 0.08;
+                state.moneyPJ -= interest;
+                ui.notify("Juros de Cheque Especial debitados (8%)!", "danger");
+            }
+
+            // Atualizar Saldo e Histórico
+            const netProfit = totalDailyRevenue - totalDailyExpenses;
+            state.moneyPJ += netProfit;
+            
+            state.historyPJ.push(Math.floor(netProfit));
             if(state.historyPJ.length > 7) state.historyPJ.shift();
 
-            // 4. Virada do Dia
+            // Virada
             state.day++;
             state.weatherIdx = Math.floor(Math.random() * WEATHER.length);
             
             ui.refresh();
             this.save();
-            ui.notify("Dia encerrado. Relatório financeiro atualizado.");
+            ui.notify(`Dia ${state.day - 1} finalizado.`);
         },
 
         withdrawProLabore() {
@@ -408,54 +440,63 @@
             if(state.moneyPJ >= amount) {
                 state.moneyPJ -= amount;
                 state.moneyPF += amount;
-                ui.notify("Pró-labore transferido para conta pessoal!");
+                ui.notify("Pró-labore retirado!");
                 ui.refresh();
             } else {
-                ui.notify("Empresa sem caixa para pró-labore!", "danger");
+                ui.notify("Caixa da empresa insuficiente!", "danger");
             }
         },
 
-        buyStock(bizId, qty) {
+        hireStaff(bizId) {
             const biz = state.businesses.find(b => b.id === bizId);
-            const config = BIZ_CONFIGS[biz.type];
-            const cost = qty * config.stockPrice;
-            
-            if(state.moneyPJ >= cost) {
-                state.moneyPJ -= cost;
-                biz.stock += qty;
-                ui.notify(`Estoque de ${config.name} abastecido.`);
+            if(state.moneyPJ >= 500) { // Taxa de contratação/treinamento
+                state.moneyPJ -= 500;
+                biz.staffCount++;
+                ui.notify("Funcionário contratado!");
                 ui.refresh();
                 ui.closeModal();
             } else {
-                ui.notify("Saldo PJ insuficiente!", "danger");
+                ui.notify("Sem dinheiro para contratar (R$ 500)!", "danger");
             }
         },
 
-        openBusiness(type, name) {
-            const config = BIZ_CONFIGS[type];
-            if(state.moneyPJ >= config.openCost) {
-                state.moneyPJ -= config.openCost;
-                state.businesses.push({
-                    id: Date.now(),
-                    type: type,
-                    name: name || config.name,
-                    stock: 20,
-                    staff: [],
-                    price: config.salePrice,
-                    reputation: 50,
-                    expiryStock: 0
-                });
-                ui.closeModal();
+        fireStaff(bizId) {
+            const biz = state.businesses.find(b => b.id === bizId);
+            if(biz.staffCount > 0) {
+                biz.staffCount--;
+                ui.notify("Funcionário demitido.");
                 ui.refresh();
-                ui.notify(`${name} aberto com sucesso!`);
-            } else {
-                ui.notify("Saldo insuficiente para abrir!", "danger");
+                ui.closeModal();
             }
         }
     };
 
-    // --- UI ENGINE ---
+    // --- INTERFACE ---
     const ui = {
+        initChart() {
+            const ctx = document.getElementById('main-chart').getContext('2d');
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['D-6', 'D-5', 'D-4', 'D-3', 'D-2', 'D-1', 'Hoje'],
+                    datasets: [{
+                        label: 'Lucro Líquido Diário',
+                        data: state.historyPJ,
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: false, grid: { color: '#334155' } }, x: { grid: { display: false } } },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        },
+
         refresh() {
             document.getElementById('money-pj').innerText = `R$ ${state.moneyPJ.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
             document.getElementById('money-pf').innerText = `R$ ${state.moneyPF.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
@@ -463,12 +504,17 @@
             const w = WEATHER[state.weatherIdx];
             document.getElementById('display-date').innerHTML = `Dia ${state.day} - ${DAYS[state.day % 7]} | <span class="weather-icon">${w.icon}</span> ${w.name}`;
             
-            // PJ Account Color (Cheque Especial)
             document.getElementById('money-pj').style.color = state.moneyPJ < 0 ? 'var(--danger)' : 'var(--info)';
 
             this.renderBusinesses();
-            this.renderStaffSummary();
             this.updateTaxes();
+            this.updateStaff();
+            this.updateLoans();
+
+            if(chartInstance) {
+                chartInstance.data.datasets[0].data = state.historyPJ;
+                chartInstance.update();
+            }
         },
 
         renderBusinesses() {
@@ -479,8 +525,8 @@
                 list.innerHTML += `
                     <div class="biz-card">
                         <div>
-                            <strong>${biz.name}</strong> <span class="label">(${config.icon})</span>
-                            <div class="label">Estoque: ${biz.stock} unid. | Preço: R$ ${biz.price}</div>
+                            <strong>${biz.name}</strong> <span>${config.icon}</span>
+                            <div class="label">Estoque: ${biz.stock} | Preço: R$ ${biz.price} | Funcionários: ${biz.staffCount}</div>
                         </div>
                         <div style="display: flex; gap: 5px;">
                             <button class="btn btn-outline" onclick="ui.openStockModal(${biz.id})">📦 Estoque</button>
@@ -491,14 +537,10 @@
             });
         },
 
-        renderStaffSummary() {
-            const totalStaff = state.businesses.reduce((acc, b) => acc + b.staff.length, 0);
-            document.getElementById('staff-summary').innerText = `${totalStaff} Funcionários contratados`;
-        },
-
         updateTaxes() {
             const totalRent = state.businesses.reduce((acc, b) => acc + BIZ_CONFIGS[b.type].rent, 0);
-            document.getElementById('total-rent').innerText = `R$ ${totalRent.toLocaleString('pt-BR')}`;
+            const totalDaily = (totalRent / 30) + (state.businesses.reduce((acc, b) => acc + (b.staffCount * 80), 0));
+            document.getElementById('total-daily-costs').innerText = `R$ ${totalDaily.toFixed(2)}`;
             
             const das = document.getElementById('das-status');
             if(state.dasPaid) {
@@ -506,70 +548,101 @@
                 das.innerText = "Pago";
             } else {
                 das.className = "status-badge bg-danger";
-                das.innerText = "Pendente";
+                das.innerText = "Pendente (Pagar R$ 75)";
                 das.onclick = () => {
-                   if(state.moneyPJ >= 75) {
-                       state.moneyPJ -= 75;
-                       state.dasPaid = true;
-                       ui.refresh();
-                       ui.notify("DAS Pago!");
-                   }
+                    if(state.moneyPJ >= 75) {
+                        state.moneyPJ -= 75;
+                        state.dasPaid = true;
+                        ui.refresh();
+                        ui.notify("DAS Pago!");
+                    } else ui.notify("Sem saldo PJ!", "danger");
                 };
             }
+        },
+
+        updateStaff() {
+            const total = state.businesses.reduce((acc, b) => acc + b.staffCount, 0);
+            document.getElementById('staff-summary').innerText = `${total} Funcionários ativos`;
+        },
+
+        updateLoans() {
+            const container = document.getElementById('active-loans');
+            container.innerHTML = '';
+            state.loans.forEach((l, idx) => {
+                container.innerHTML += `<div class="label" style="color: var(--danger)">⚠️ Empréstimo: R$ ${l.amount} (${l.daysLeft} dias restantes)</div>`;
+            });
         },
 
         openStockModal(bizId) {
             const biz = state.businesses.find(b => b.id === bizId);
             const config = BIZ_CONFIGS[biz.type];
             this.showModal(`
-                <h3>Abastecer Estoque: ${biz.name}</h3>
-                <p class="label" style="margin: 10px 0">Preço de custo: R$ ${config.stockPrice}/unid.</p>
-                <button class="btn btn-info btn-block" onclick="game.buyStock(${bizId}, 10)">Comprar 10 (R$ ${10 * config.stockPrice})</button>
-                <button class="btn btn-info btn-block" onclick="game.buyStock(${bizId}, 50)">Comprar 50 (R$ ${50 * config.stockPrice})</button>
-                <button class="btn btn-outline btn-block" onclick="ui.closeModal()">Cancelar</button>
+                <h3>Comprar Estoque: ${biz.name}</h3>
+                <p class="label">Custo unitário: R$ ${config.stockPrice}</p>
+                <button class="btn btn-info btn-block" onclick="game.buyStock(${bizId}, 20)">Comprar 20 (R$ ${20 * config.stockPrice})</button>
+                <button class="btn btn-info btn-block" onclick="game.buyStock(${bizId}, 100)">Comprar 100 (R$ ${100 * config.stockPrice})</button>
+                <button class="btn btn-outline btn-block" onclick="ui.closeModal()">Fechar</button>
             `);
         },
 
         openManageModal(bizId) {
             const biz = state.businesses.find(b => b.id === bizId);
             this.showModal(`
-                <h3>Gerenciar: ${biz.name}</h3>
-                <label class="label">Preço de Venda (R$)</label>
-                <input type="number" id="new-price" value="${biz.price}">
-                <button class="btn btn-primary btn-block" onclick="ui.updateBiz(${bizId})">Salvar Alterações</button>
-                <hr style="margin: 15px 0; border: 0; border-top: 1px solid var(--border)">
-                <button class="btn btn-danger btn-block" onclick="ui.fireStaff(${bizId})">Demitir Funcionário</button>
-                <button class="btn btn-outline btn-block" onclick="ui.closeModal()">Voltar</button>
+                <h3>Gerenciar ${biz.name}</h3>
+                <label class="label">Preço de Venda</label>
+                <input type="number" id="m-price" value="${biz.price}">
+                <button class="btn btn-primary btn-block" onclick="ui.saveBiz(${bizId})">Salvar Alterações</button>
+                <hr style="margin: 15px 0; border-color: var(--border)">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <button class="btn btn-info" onclick="game.hireStaff(${bizId})">Contratar (R$ 500)</button>
+                    <button class="btn btn-danger" onclick="game.fireStaff(${bizId})">Demitir</button>
+                </div>
+                <button class="btn btn-outline btn-block" style="margin-top:10px" onclick="ui.closeModal()">Voltar</button>
             `);
         },
 
-        updateBiz(bizId) {
-            const biz = state.businesses.find(b => b.id === bizId);
-            biz.price = parseFloat(document.getElementById('new-price').value);
-            this.closeModal();
-            this.refresh();
-        },
-
-        openNewBizModal() {
+        openLoanModal() {
             this.showModal(`
-                <h3>Abrir Novo Negócio</h3>
-                <div class="label" style="margin-bottom: 10px">Escolha o ramo:</div>
-                <select id="new-biz-type" style="width: 100%; padding: 10px; background: var(--bg-dark); color: white; border-radius: 8px; margin-bottom: 15px;">
-                    <option value="mercadinho">🛒 Mercadinho (R$ 2.000)</option>
-                    <option value="barbearia">💈 Barbearia (R$ 5.000)</option>
-                    <option value="lanchonete">🍔 Lanchonete (R$ 8.000)</option>
-                </select>
-                <input type="text" id="new-biz-name" placeholder="Nome da Empresa">
-                <button class="btn btn-info btn-block" onclick="game.openBusiness(document.getElementById('new-biz-type').value, document.getElementById('new-biz-name').value)">Fundar Empresa</button>
+                <h3>Crédito Bancário</h3>
+                <p class="label">Taxa: 2% ao dia | Prazo: 10 dias</p>
+                <button class="btn btn-danger btn-block" onclick="ui.takeLoan(1000)">Pedir R$ 1.000</button>
+                <button class="btn btn-danger btn-block" onclick="ui.takeLoan(5000)">Pedir R$ 5.000</button>
                 <button class="btn btn-outline btn-block" onclick="ui.closeModal()">Cancelar</button>
             `);
         },
 
+        openNewBizModal() {
+            this.showModal(`
+                <h3>Novo Negócio</h3>
+                <select id="nb-type">
+                    <option value="mercadinho">🛒 Mercadinho (R$ 2.000)</option>
+                    <option value="barbearia">💈 Barbearia (R$ 5.000)</option>
+                    <option value="lanchonete">🍔 Lanchonete (R$ 8.000)</option>
+                </select>
+                <input type="text" id="nb-name" placeholder="Nome da Empresa">
+                <button class="btn btn-primary btn-block" onclick="game.openBusiness(document.getElementById('nb-type').value, document.getElementById('nb-name').value)">Fundar Negócio</button>
+                <button class="btn btn-outline btn-block" onclick="ui.closeModal()">Cancelar</button>
+            `);
+        },
+
+        takeLoan(amt) {
+            state.moneyPJ += amt;
+            state.loans.push({ amount: amt, daysLeft: 10 });
+            ui.notify(`Crédito de R$ ${amt} liberado!`);
+            ui.closeModal();
+            ui.refresh();
+        },
+
+        saveBiz(id) {
+            const biz = state.businesses.find(b => b.id === id);
+            biz.price = parseFloat(document.getElementById('m-price').value);
+            ui.closeModal();
+            ui.refresh();
+        },
+
         showModal(html) {
-            const overlay = document.getElementById('modal-overlay');
-            const content = document.getElementById('modal-content');
-            content.innerHTML = html;
-            overlay.style.display = 'flex';
+            document.getElementById('modal-content').innerHTML = html;
+            document.getElementById('modal-overlay').style.display = 'flex';
         },
 
         closeModal() { document.getElementById('modal-overlay').style.display = 'none'; },
@@ -579,16 +652,47 @@
             const n = document.createElement('div');
             n.className = 'notif';
             if(type === 'danger') n.style.borderLeftColor = 'var(--danger)';
+            if(type === 'warning') n.style.borderLeftColor = 'var(--accent)';
             n.innerText = msg;
             area.appendChild(n);
             setTimeout(() => { n.style.opacity = '0'; setTimeout(() => n.remove(), 300); }, 4000);
         }
     };
 
-    const DAYS = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
+    // --- REPAROS ESPECÍFICOS ---
+    game.buyStock = function(bizId, qty) {
+        const biz = state.businesses.find(b => b.id === bizId);
+        const cost = qty * BIZ_CONFIGS[biz.type].stockPrice;
+        if(state.moneyPJ >= cost) {
+            state.moneyPJ -= cost;
+            biz.stock += qty;
+            ui.notify("Estoque abastecido!");
+            ui.refresh();
+            ui.closeModal();
+        } else ui.notify("Saldo PJ insuficiente!", "danger");
+    };
+
+    game.openBusiness = function(type, name) {
+        const config = BIZ_CONFIGS[type];
+        if(state.moneyPJ >= config.openCost) {
+            state.moneyPJ -= config.openCost;
+            state.businesses.push({
+                id: Date.now(),
+                type: type,
+                name: name || config.name,
+                stock: 20,
+                staffCount: 0,
+                price: config.salePrice,
+                reputation: 60,
+                expiryStock: 0
+            });
+            ui.notify("Negócio fundado!");
+            ui.closeModal();
+            ui.refresh();
+        } else ui.notify("Saldo insuficiente!", "danger");
+    };
 
     window.onload = () => game.init();
-
 </script>
 
 </body>

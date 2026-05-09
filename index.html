@@ -257,7 +257,7 @@
     <div id="game-container">
         <header>
             <div>
-                <h1 style="color: var(--primary)">MEI <span style="color: white">Simulator</span> <span class="badge badge-purple">V2.0</span></h1>
+                <h1 style="color: var(--primary)">MEI <span style="color: white">Simulator</span> <span class="badge badge-purple">V2.1</span></h1>
                 <p id="game-date" style="color: var(--text-muted)">Carregando dia...</p>
             </div>
             <div class="stats-bar">
@@ -279,7 +279,7 @@
             </div>
         </header>
 
-        <!-- Main Hub -->
+        <!-- Hub Principal -->
         <div id="main-hub">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 10px; flex-wrap: wrap;">
                 <h2>Meus Negócios</h2>
@@ -300,7 +300,7 @@
             </div>
         </div>
 
-        <!-- Business Detail View -->
+        <!-- Visão de Detalhes do Negócio -->
         <div id="business-view" class="business-detail">
             <button class="btn btn-outline" style="width: auto; margin-bottom: 20px;" onclick="ui.showHub()">← Voltar</button>
             <div id="business-header" style="margin-bottom: 20px;"></div>
@@ -308,7 +308,7 @@
             <div class="tabs">
                 <div class="tab active" onclick="ui.changeTab(0)">Operação</div>
                 <div class="tab" onclick="ui.changeTab(1)">Estoque</div>
-                <div class="tab" onclick="ui.changeTab(2)">Equipa</div>
+                <div class="tab" onclick="ui.changeTab(2)">Equipe</div>
                 <div class="tab" onclick="ui.changeTab(3)">Marketing & Upgrades</div>
             </div>
 
@@ -319,7 +319,7 @@
                         <p class="text-muted" style="margin-bottom: 15px">Preço unitário: <span id="price-real-value" style="color: var(--primary); font-weight: bold;">R$ 0,00</span></p>
                         <input type="range" id="price-slider" min="50" max="250" value="100" style="width: 100%" oninput="ui.updatePriceLabel()">
                         <div style="display: flex; justify-content: space-between; margin-top: 10px;">
-                            <span class="text-muted">Económico</span>
+                            <span class="text-muted">Econômico</span>
                             <span id="price-label" style="font-weight: bold;">100%</span>
                             <span class="text-muted">Premium</span>
                         </div>
@@ -334,10 +334,10 @@
             <div id="tab-stock" class="management-section">
                 <div class="grid">
                     <div class="card">
-                        <h3>Armazém</h3>
+                        <h3>Almoxarifado</h3>
                         <p id="stock-count" style="font-size: 2rem; font-weight: bold">0 / 0</p>
                         <div class="progress-container"><div id="stock-progress" class="progress-fill"></div></div>
-                        <p class="text-muted" style="margin-top: 10px; font-size: 0.8rem;">Cuidado: Stock parado pode estragar!</p>
+                        <p class="text-muted" style="margin-top: 10px; font-size: 0.8rem;">Cuidado: Estoque parado pode estragar!</p>
                     </div>
                     <div class="card">
                         <h3>Fornecedor</h3>
@@ -358,14 +358,14 @@
             </div>
         </div>
         
-        <!-- Shop View (Luxury Items) -->
+        <!-- Loja de Luxo -->
         <div id="shop-view" class="shop-view">
             <button class="btn btn-outline" style="width: auto; margin-bottom: 20px;" onclick="ui.showHub()">← Voltar</button>
             <h2 style="margin-bottom: 20px;">💎 Conquistas de Estilo de Vida</h2>
             <div id="luxury-grid" class="grid"></div>
         </div>
 
-        <!-- Bank View -->
+        <!-- Banco -->
         <div id="bank-view" class="business-detail">
             <button class="btn btn-outline" style="width: auto; margin-bottom: 20px;" onclick="ui.showHub()">← Voltar</button>
             <div class="card">
@@ -387,7 +387,7 @@
         </div>
     </div>
 
-    <!-- Event Overlay -->
+    <!-- Overlay de Eventos -->
     <div id="event-overlay">
         <div class="event-modal">
             <h2 id="event-title">Notícia!</h2>
@@ -408,16 +408,16 @@
         };
 
         const LUXURY_ITEMS = [
-            { id: 'moto', name: 'Mota de Entregas', cost: 8000, icon: '🛵', perk: 'Logística: +10% vendas em todos negócios' },
+            { id: 'moto', name: 'Moto de Entregas', cost: 8000, icon: '🛵', perk: 'Logística: +10% vendas em todos os negócios' },
             { id: 'escritorio', name: 'Coworking VIP', cost: 25000, icon: '🏢', perk: 'Foco: -15% custos de manutenção' },
             { id: 'carro', name: 'Sedan Executivo', cost: 65000, icon: '🚗', perk: 'Status: +15% Reputação base' },
-            { id: 'mansao', name: 'Cobertura Duplex', cost: 250000, icon: '🏙️', perk: 'Império: Desbloqueia bónus de XP x2' }
+            { id: 'mansao', name: 'Cobertura Duplex', cost: 250000, icon: '🏙️', perk: 'Império: Desbloqueia bônus de XP x2' }
         ];
 
         const UPGRADES = [
             { id: 'ar', name: 'Ar Condicionado', cost: 2000, effect: 'Conforto: +15% Procura' },
             { id: 'wifi', name: 'Wi-Fi Grátis', cost: 800, effect: 'Fidelidade: +5% Reputação' },
-            { id: 'stock_plus', name: 'Câmara Fria', cost: 3500, effect: 'Conservação: Stock não estraga' }
+            { id: 'stock_plus', name: 'Câmara Fria', cost: 3500, effect: 'Conservação: Estoque não estraga' }
         ];
 
         const STAFF_LEVELS = [
@@ -483,7 +483,7 @@
                     let demand = t.baseDemand * (state.reputation/50);
                     demand *= (2.5 - (b.priceMult * 1.5)); // Elasticidade de preço
                     
-                    // Bónus de Itens de Luxo
+                    // Bônus de Itens de Luxo
                     if(state.luxury.includes('moto')) demand *= 1.1;
                     if(state.luxury.includes('carro')) state.reputation = Math.min(100, state.reputation + 0.1);
 
@@ -500,7 +500,7 @@
                     let rentCost = t.rent;
                     if(state.luxury.includes('escritorio')) rentCost *= 0.85;
 
-                    // Perda de Stock (Validade)
+                    // Perda de Estoque (Validade)
                     if(!b.upgrades.includes('stock_plus') && b.stock > 10) {
                         if(Math.random() > 0.7) {
                             const loss = Math.floor(b.stock * 0.1);
@@ -541,7 +541,7 @@
                 if(Math.random() > 0.2) return;
                 const events = [
                     { t: "Black Friday", d: "A procura aumentou em 50% por um dia!", f: () => { state.reputation += 2; } },
-                    { t: "Greve de Transportes", d: "Custos de reposição de stock subiram.", f: () => { state.money -= 200; } },
+                    { t: "Greve de Transportes", d: "Custos de reposição de estoque subiram.", f: () => { state.money -= 200; } },
                     { t: "Elogio na Web", d: "Um cliente famoso adorou o seu serviço. +5 Reputação.", f: () => { state.reputation = Math.min(100, state.reputation + 5); } }
                 ];
                 const e = events[Math.floor(Math.random() * events.length)];
@@ -558,7 +558,7 @@
                     b.stock += amt;
                     this.refresh();
                     ui.showBusiness(ui.activeBiz);
-                    ui.notify("Stock abastecido.");
+                    ui.notify("Estoque abastecido.");
                 } else ui.notify("Erro: Verifique saldo ou espaço.", "danger");
             },
 
@@ -569,6 +569,30 @@
                     b.staff.push({ lvl: 0 });
                     ui.showBusiness(ui.activeBiz);
                     this.refresh();
+                } else {
+                    ui.notify("Saldo insuficiente para contratar.", "danger");
+                }
+            },
+
+            buyBusiness(id) {
+                const t = BIZ_TYPES[id.toUpperCase()];
+                if(state.money >= t.unlockCost && !state.ownedBusinesses[id]) {
+                    state.money -= t.unlockCost;
+                    state.ownedBusinesses[id] = { 
+                        stock: 10, 
+                        priceMult: 1.0, 
+                        staff: [], 
+                        upgrades: [], 
+                        mkt: false, 
+                        lastRev: 0, 
+                        lastCust: 0 
+                    };
+                    ui.notify(`${t.name} inaugurado com sucesso!`);
+                    this.refresh();
+                } else if(state.ownedBusinesses[id]) {
+                    ui.notify("Você já possui este negócio.", "danger");
+                } else {
+                    ui.notify("Saldo insuficiente para investimento.", "danger");
                 }
             },
 
@@ -598,7 +622,7 @@
             chart: null,
 
             updateHeader() {
-                document.getElementById('player-money').innerText = `R$ ${state.money.toLocaleString('pt-PT')}`;
+                document.getElementById('player-money').innerText = `R$ ${state.money.toLocaleString('pt-BR')}`;
                 document.getElementById('player-level').innerText = `LV ${state.level}`;
                 document.getElementById('player-rep').innerText = `${state.reputation.toFixed(0)}%`;
                 document.getElementById('game-date').innerText = `Dia ${state.day} - ${DAYS[state.day % 7]}`;
@@ -618,14 +642,14 @@
                     if(owned) {
                         card.innerHTML = `
                             <h3>${t.icon} ${t.name}</h3>
-                            <p class="text-muted">Stock: ${owned.stock} un.</p>
-                            <button class="btn" onclick="ui.showBusiness('${t.id}')">Gerir Unidade</button>
+                            <p class="text-muted">Estoque: ${owned.stock} un.</p>
+                            <button class="btn" onclick="ui.showBusiness('${t.id}')">Gerenciar Unidade</button>
                         `;
                     } else {
                         const can = state.money >= t.unlockCost;
                         card.innerHTML = `
                             <h3 style="opacity: 0.5">${t.icon} ${t.name}</h3>
-                            <p class="text-muted">Investimento: R$ ${t.unlockCost}</p>
+                            <p class="text-muted">Investimento: R$ ${t.unlockCost.toLocaleString('pt-BR')}</p>
                             <button class="btn btn-outline" ${!can?'disabled':''} onclick="game.buyBusiness('${t.id}')">Abrir Filial</button>
                         `;
                     }
@@ -681,6 +705,8 @@
                     b.upgrades.push(uid);
                     this.showBusiness(this.activeBiz);
                     game.refresh();
+                } else {
+                    ui.notify("Saldo insuficiente para upgrade.", "danger");
                 }
             },
 
